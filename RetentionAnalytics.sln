@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35707.178 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Msz2001.Analytics.Retention", "Msz2001.Analytics.Retention\Msz2001.Analytics.Retention.csproj", "{78B50735-5551-408B-AB55-1BC5D1C0A69D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Msz2001.MediaWikiDump.XmlDumpClient", "Msz2001.MediaWikiDump.XmlDumpClient\Msz2001.MediaWikiDump.XmlDumpClient.csproj", "{AA8B41A2-F516-49CC-A1DF-9FEC65AABA3D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{78B50735-5551-408B-AB55-1BC5D1C0A69D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78B50735-5551-408B-AB55-1BC5D1C0A69D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78B50735-5551-408B-AB55-1BC5D1C0A69D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78B50735-5551-408B-AB55-1BC5D1C0A69D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA8B41A2-F516-49CC-A1DF-9FEC65AABA3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA8B41A2-F516-49CC-A1DF-9FEC65AABA3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA8B41A2-F516-49CC-A1DF-9FEC65AABA3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA8B41A2-F516-49CC-A1DF-9FEC65AABA3D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
