@@ -51,7 +51,17 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient
 
                         if (siteinfo is not null)
                         {
-                            var item = ProcessContentElement(element, siteinfo);
+                            TContent? item;
+                            try
+                            {
+                                item = ProcessContentElement(element, siteinfo);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Failed to process element {element.Name.LocalName}: {ex.Message}");
+                                continue;
+                            }
+
                             if (item is not null)
                                 yield return item;
                         }
@@ -68,7 +78,17 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient
                 {
                     foreach (var elem in contentElems)
                     {
-                        var item = ProcessContentElement(elem, siteinfo);
+                        TContent? item;
+                        try
+                        {
+                            item = ProcessContentElement(element, siteinfo);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Failed to process element {element.Name.LocalName}: {ex.Message}");
+                            continue;
+                        }
+
                         if (item is not null)
                             yield return item;
                     }
