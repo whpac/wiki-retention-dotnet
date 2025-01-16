@@ -24,7 +24,7 @@ namespace Msz2001.Analytics.Retention
             var logPath = args[0];
             var outputPath = args[1];
 
-            using var fileStream = new FileStream(logPath, FileMode.Open);
+            using var fileStream = new FileStream(logPath, FileMode.Open, FileAccess.Read);
             using var stream = new GZipStream(fileStream, CompressionMode.Decompress);
             var xmlReader = XmlReader.Create(stream);
             var logReader = new LogDumpReader(xmlReader);
