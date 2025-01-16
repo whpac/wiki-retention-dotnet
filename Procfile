@@ -1,1 +1,1 @@
-retention-analyzer: dotnet run --project Msz2001.Analytics.Retention -- 
+retention-analyzer: heroku_output/Msz2001.Analytics.Retention 
