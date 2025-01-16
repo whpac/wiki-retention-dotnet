@@ -1,0 +1,1 @@
+retention-analyzer: dotnet run --project Msz2001.Analytics.Retention -- 
