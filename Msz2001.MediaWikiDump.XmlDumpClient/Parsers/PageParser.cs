@@ -1,4 +1,6 @@
-﻿using Msz2001.MediaWikiDump.XmlDumpClient.Entities;
+﻿using Microsoft.Extensions.Logging;
+
+using Msz2001.MediaWikiDump.XmlDumpClient.Entities;
 
 using System;
 using System.Collections.Generic;
@@ -9,9 +11,11 @@ using System.Xml.Linq;
 
 namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
 {
-    internal class PageParser
+    internal partial class PageParser(ILogger Logger)
     {
-        internal static Page Parse(XElement elem, SiteInfo siteInfo)
+        private readonly RevisionParser RevisionParser = new(Logger);
+
+        internal Page Parse(XElement elem, SiteInfo siteInfo)
         {
             uint? id = null;
             Title? title = null;
@@ -30,16 +34,19 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
                     case "revision":
                         revisions.Add(RevisionParser.Parse(child));
                         break;
+                    default:
+                        LogUnexpectedChildTag(Logger, id, child.Name.LocalName);
+                        break;
                 }
             }
 
             List<string> missingTags = [];
-            if (id is null) missingTags.Add("id");
-            if (title is null) missingTags.Add("title");
-            if (revisions.Count == 0) missingTags.Add("revision");
+            if (id is null) missingTags.Add("<id>");
+            if (title is null) missingTags.Add("<title>");
+            if (revisions.Count == 0) missingTags.Add("<revision>");
 
             if (missingTags.Count > 0)
-                throw new Exception($"Missing tags in logitem: {string.Join(", ", missingTags)}");
+                throw new Exception($"Missing tags in <page> (ID: {id}): {string.Join(", ", missingTags)}");
 
             return new Page(revisions)
             {
@@ -47,5 +54,8 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
                 Id = id!.Value,
             };
         }
+
+        [LoggerMessage(Level = LogLevel.Warning, Message = "Unexpected element in <page> (ID: {id}): <{ElementName}>")]
+        static partial void LogUnexpectedChildTag(ILogger logger, uint? id, string elementName);
     }
 }

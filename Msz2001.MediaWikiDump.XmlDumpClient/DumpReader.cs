@@ -1,4 +1,6 @@
-﻿using Msz2001.MediaWikiDump.XmlDumpClient.Entities;
+﻿using Microsoft.Extensions.Logging;
+
+using Msz2001.MediaWikiDump.XmlDumpClient.Entities;
 using Msz2001.MediaWikiDump.XmlDumpClient.Parsers;
 
 using System;
@@ -12,14 +14,10 @@ using System.Xml.Linq;
 
 namespace Msz2001.MediaWikiDump.XmlDumpClient
 {
-    public abstract class DumpReader<TContent>
+    public abstract partial class DumpReader<TContent>(XmlReader XmlReader, ILogger Logger) where TContent : IDumpEntry
     {
-        private readonly XmlReader XmlReader;
+        private readonly SiteInfoParser SiteInfoParser = new(Logger);
         protected SiteInfo? SiteInfo { get; private set; }
-
-        public DumpReader(XmlReader xmlReader) {
-            this.XmlReader = xmlReader;
-        }
 
         public IEnumerable<TContent> GetItems()
         {
@@ -42,6 +40,24 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient
                             throw new Exception("Failed to read siteinfo element: it's not an XML element");
 
                         siteinfo = SiteInfoParser.Parse(element);
+
+                        // If we have any XML elems that were held, it's time to process them
+                        foreach (var elem in contentElems)
+                        {
+                            TContent? item;
+                            try
+                            {
+                                item = ProcessContentElement(elem, siteinfo);
+                            }
+                            catch (Exception ex)
+                            {
+                                LogProcessingFailed(Logger, element.Name.LocalName, ex);
+                                continue;
+                            }
+
+                            if (item is not null)
+                                yield return item;
+                        }
                         break;
 
                     default:
@@ -58,7 +74,7 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient
                             }
                             catch (Exception ex)
                             {
-                                Console.WriteLine($"Failed to process element {element.Name.LocalName}: {ex.Message}");
+                                LogProcessingFailed(Logger, element.Name.LocalName, ex);
                                 continue;
                             }
 
@@ -71,28 +87,6 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient
                         }
                         break;
                 }
-
-
-                // If we have any XML elems that were held, it's time to process them
-                if (siteinfo is not null && contentElems.Count > 0)
-                {
-                    foreach (var elem in contentElems)
-                    {
-                        TContent? item;
-                        try
-                        {
-                            item = ProcessContentElement(element, siteinfo);
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Failed to process element {element.Name.LocalName}: {ex.Message}");
-                            continue;
-                        }
-
-                        if (item is not null)
-                            yield return item;
-                    }
-                }
             }
         }
 
@@ -102,5 +96,8 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient
         }
 
         protected abstract TContent? ProcessContentElement(XElement element, SiteInfo siteinfo);
+
+        [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to process element <{TagName}>")]
+        static partial void LogProcessingFailed(ILogger logger, string tagName, Exception ex);
     }
 }

@@ -8,6 +8,8 @@ namespace Msz2001.Analytics.Retention.Instrumentation
 {
     internal interface IExtractor<in TEntry>
     {
+        string Name { get; }
+
         void BeforeProcessing();
 
         void ProcessEntry(TEntry entry);

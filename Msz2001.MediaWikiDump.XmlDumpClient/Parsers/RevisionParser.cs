@@ -1,4 +1,6 @@
-﻿using Msz2001.MediaWikiDump.XmlDumpClient.Entities;
+﻿using Microsoft.Extensions.Logging;
+
+using Msz2001.MediaWikiDump.XmlDumpClient.Entities;
 
 using System;
 using System.Collections.Generic;
@@ -9,9 +11,11 @@ using System.Xml.Linq;
 
 namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
 {
-    internal class RevisionParser
+    internal partial class RevisionParser(ILogger Logger)
     {
-        internal static Revision Parse(XElement elem)
+        private readonly UserParser UserParser = new(Logger);
+
+        internal Revision Parse(XElement elem)
         {
             uint? id = null, parentId = null, length = null;
             Timestamp? timestamp = null;
@@ -62,20 +66,20 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
                     case "origin":
                         break; // Ignore without triggering warnings. What's origin?
                     default:
-                        Console.WriteLine($"Unexpected element in logitem: {child.Name.LocalName}");
+                        LogUnexpectedChildTag(Logger, id, child.Name.LocalName);
                         break;
                 }
             }
 
             List<string> missingTags = [];
-            if (id is null) missingTags.Add("id");
-            if (timestamp is null) missingTags.Add("timestamp");
-            if (contentModel is null) missingTags.Add("model");
-            if (contentFormat is null) missingTags.Add("format");
-            if (length is null) missingTags.Add("length attribute on text tag");
+            if (id is null) missingTags.Add("<id>");
+            if (timestamp is null) missingTags.Add("<timestamp>");
+            if (contentModel is null) missingTags.Add("<model>");
+            if (contentFormat is null) missingTags.Add("<format>");
+            if (length is null) missingTags.Add("length attribute on <text> tag");
 
             if (missingTags.Count > 0)
-                throw new Exception($"Missing tags in logitem: {string.Join(", ", missingTags)}");
+                throw new Exception($"Missing tags in <revision> (ID: {id}): {string.Join(", ", missingTags)}");
 
             return new Revision
             {
@@ -90,5 +94,8 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
                 Length = length!.Value,
             };
         }
+
+        [LoggerMessage(Level = LogLevel.Warning, Message = "Unexpected element in <revision> (ID: {id}): <{ElementName}>")]
+        static partial void LogUnexpectedChildTag(ILogger logger, uint? id, string elementName);
     }
 }

@@ -1,4 +1,6 @@
-﻿using Msz2001.Analytics.Retention.Extractors;
+﻿using Microsoft.Extensions.Logging;
+
+using Msz2001.Analytics.Retention.Extractors;
 using Msz2001.Analytics.Retention.Instrumentation;
 using Msz2001.MediaWikiDump.XmlDumpClient;
 
@@ -21,18 +23,20 @@ namespace Msz2001.Analytics.Retention
                 Console.WriteLine("Usage: Msz2001.Analytics.Retention <logPath> <outputPath>");
                 return;
             }
+            ILogger logger = ConfigureLogger();
+
             var logPath = args[0];
             var outputPath = args[1];
 
             using var fileStream = new FileStream(logPath, FileMode.Open, FileAccess.Read);
             using var stream = new GZipStream(fileStream, CompressionMode.Decompress);
             var xmlReader = XmlReader.Create(stream);
-            var logReader = new LogDumpReader(xmlReader);
+            var logReader = new LogDumpReader(xmlReader, logger);
 
             using var streamWriter = new StreamWriter(outputPath);
-            var registrationDates = new RegistrationDates(streamWriter);
+            var registrationDates = new RegistrationDates(streamWriter, logger);
 
-            var instrumentator = new DumpInstrumentator();
+            var instrumentator = new DumpInstrumentator(logger);
 
             var start = DateTime.Now;
             instrumentator.ProcessDump(logReader, [registrationDates]);
@@ -40,6 +44,15 @@ namespace Msz2001.Analytics.Retention
 
             var duration = end - start;
             Console.WriteLine($"Duration: {duration}");
+        }
+
+        static ILogger ConfigureLogger()
+        {
+            var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.AddConsole();
+            });
+            return loggerFactory.CreateLogger<Program>();
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using Msz2001.MediaWikiDump.XmlDumpClient.Entities;
+﻿using Microsoft.Extensions.Logging;
+
+using Msz2001.MediaWikiDump.XmlDumpClient.Entities;
 
 using System;
 using System.Collections.Generic;
@@ -9,9 +11,11 @@ using System.Xml.Linq;
 
 namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
 {
-    internal class LogItemParser
+    internal partial class LogItemParser(ILogger Logger)
     {
-        internal static LogItem Parse(XElement elem, SiteInfo siteinfo)
+        private readonly UserParser UserParser = new(Logger);
+
+        internal LogItem Parse(XElement elem, SiteInfo siteinfo)
         {
             uint? id = null;
             Timestamp? timestamp = null;
@@ -57,19 +61,19 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
                         // We don't have to do anything, just suppress the warning
                         break;
                     default:
-                        Console.WriteLine($"Unexpected element in logitem: {child.Name.LocalName}");
+                        LogUnexpectedChildTag(Logger, id, child.Name.LocalName);
                         break;
                 }
             }
 
             List<string> missingTags = [];
-            if (id is null) missingTags.Add("id");
-            if (timestamp is null) missingTags.Add("timestamp");
-            if (type is null) missingTags.Add("type");
-            if (action is null) missingTags.Add("action");
+            if (id is null) missingTags.Add("<id>");
+            if (timestamp is null) missingTags.Add("<timestamp>");
+            if (type is null) missingTags.Add("<type>");
+            if (action is null) missingTags.Add("<action>");
 
             if (missingTags.Count > 0)
-                throw new Exception($"Missing tags in logitem: {string.Join(", ", missingTags)}");
+                throw new Exception($"Missing tags in <logitem> (ID: {id}): {string.Join(", ", missingTags)}");
 
             return new LogItem(parameters)
             {
@@ -82,5 +86,8 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
                 Title = title,
             };
         }
+
+        [LoggerMessage(Level = LogLevel.Warning, Message = "Unexpected element in <logitem> (ID: {id}): <{ElementName}>")]
+        static partial void LogUnexpectedChildTag(ILogger logger, uint? id, string elementName);
     }
 }

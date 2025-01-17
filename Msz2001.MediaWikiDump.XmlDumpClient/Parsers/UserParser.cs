@@ -1,4 +1,6 @@
-﻿using Msz2001.MediaWikiDump.XmlDumpClient.Entities;
+﻿using Microsoft.Extensions.Logging;
+
+using Msz2001.MediaWikiDump.XmlDumpClient.Entities;
 
 using System;
 using System.Collections.Generic;
@@ -9,9 +11,9 @@ using System.Xml.Linq;
 
 namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
 {
-    internal class UserParser
+    internal partial class UserParser(ILogger Logger)
     {
-        internal static User Parse(XElement elem)
+        internal User Parse(XElement elem)
         {
             uint? id = null;
             string? name = null, ip = null;
@@ -30,7 +32,7 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
                         ip = child.Value;
                         break;
                     default:
-                        Console.WriteLine($"Unexpected element in user: {child.Name.LocalName}");
+                        LogUnexpectedChildTag(Logger, id, child.Name.LocalName);
                         break;
                 }
             }
@@ -39,10 +41,10 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
                 throw new InvalidOperationException("User element should have either <ip> or <id> and <username> tags.");
 
             if ((id is null && name is not null) || (id is not null && name is null))
-                throw new InvalidOperationException("Both <id> and <username> have to be set if one is present.");
+                throw new InvalidOperationException("Both <id> and <username> have to be set if one is present " + ((id is null) ? $"(username: {name})." : $"(id: {id})."));
 
             if ((id is not null || name is not null) && ip is not null)
-                throw new InvalidOperationException("<ip> cannot be specified together with <ip> or <id>.");
+                throw new InvalidOperationException($"User's <ip> cannot be specified together with <ip> or <id> (user ID: {id}).");
 
             return new User
             {
@@ -51,5 +53,8 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
                 IP = ip,
             };
         }
+
+        [LoggerMessage(Level = LogLevel.Warning, Message = "Unexpected element in <contributor> (ID: {id}): <{ElementName}>")]
+        static partial void LogUnexpectedChildTag(ILogger logger, uint? id, string elementName);
     }
 }

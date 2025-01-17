@@ -1,4 +1,6 @@
-﻿using Msz2001.MediaWikiDump.XmlDumpClient.Entities;
+﻿using Microsoft.Extensions.Logging;
+
+using Msz2001.MediaWikiDump.XmlDumpClient.Entities;
 
 using System;
 using System.Collections.Generic;
@@ -9,9 +11,9 @@ using System.Xml.Linq;
 
 namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
 {
-    internal class SiteInfoParser
+    internal partial class SiteInfoParser(ILogger Logger)
     {
-        internal static SiteInfo Parse(XElement elem)
+        internal SiteInfo Parse(XElement elem)
         {
             string? siteName = null, dbName = null, homeUrl = null, software = null;
             CasingScheme? defaultCasing = null;
@@ -44,20 +46,20 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
                         }
                         break;
                     default:
-                        Console.WriteLine($"Unexpected element in siteinfo: {child.Name.LocalName}");
+                        LogUnexpectedChildTag(Logger, child.Name.LocalName);
                         break;
                 }
             }
 
             List<string> missingTags = [];
-            if (siteName is null) missingTags.Add("sitename");
-            if (dbName is null) missingTags.Add("dbname");
-            if (homeUrl is null) missingTags.Add("base");
-            if (software is null) missingTags.Add("generator");
-            if (defaultCasing is null) missingTags.Add("case");
+            if (siteName is null) missingTags.Add("<sitename>");
+            if (dbName is null) missingTags.Add("<dbname>");
+            if (homeUrl is null) missingTags.Add("<base>");
+            if (software is null) missingTags.Add("<generator>");
+            if (defaultCasing is null) missingTags.Add("<case>");
 
             if (missingTags.Count > 0)
-                throw new Exception($"Missing required tags in siteinfo: {string.Join(", ", missingTags)}");
+                throw new Exception($"Missing required tags in <siteinfo>: {string.Join(", ", missingTags)}");
 
             return new SiteInfo(namespaces)
             {
@@ -68,5 +70,8 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
                 DefaultCasing = defaultCasing!.Value,
             };
         }
+
+        [LoggerMessage(Level = LogLevel.Warning, Message = "Unexpected element in <siteinfo>: <{ElementName}>")]
+        static partial void LogUnexpectedChildTag(ILogger logger, string elementName);
     }
 }

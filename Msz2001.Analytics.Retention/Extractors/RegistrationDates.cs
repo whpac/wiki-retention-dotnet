@@ -1,4 +1,6 @@
-﻿using Msz2001.Analytics.Retention.Instrumentation;
+﻿using Microsoft.Extensions.Logging;
+
+using Msz2001.Analytics.Retention.Instrumentation;
 using Msz2001.MediaWikiDump.XmlDumpClient.Entities;
 
 using System;
@@ -10,8 +12,10 @@ using System.Threading.Tasks;
 
 namespace Msz2001.Analytics.Retention.Extractors
 {
-    internal class RegistrationDates(StreamWriter OutputStream) : IExtractor<LogItem>
+    internal partial class RegistrationDates(StreamWriter OutputStream, ILogger logger) : IExtractor<LogItem>
     {
+        public string Name => nameof(RegistrationDates);
+        private readonly ILogger Logger = logger;
 
         public void BeforeProcessing()
         {
@@ -42,7 +46,7 @@ namespace Msz2001.Analytics.Retention.Extractors
 
             if (createdUserId is null)
             {
-                Console.WriteLine($"Could not extract user ID from {entry.Params}");
+                LogNoUserId(Logger, entry.Params?.ToString() ?? "", entry.Id);
                 return;
             }
 
@@ -63,5 +67,8 @@ namespace Msz2001.Analytics.Retention.Extractors
         {
             OutputStream.WriteLine(string.Join("\t", columns));
         }
+
+        [LoggerMessage(Level = LogLevel.Warning, Message = "Can't extract user ID from `{ParamsString}` for entry {EntryId}")]
+        static partial void LogNoUserId(ILogger logger, string paramsString, uint entryId);
     }
 }

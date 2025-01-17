@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Msz2001.MediaWikiDump.XmlDumpClient.Entities
 {
-    public class Page
+    public class Page : IDumpEntry
     {
         public required uint Id { get; init; }
         public required Title Title { get; init; }

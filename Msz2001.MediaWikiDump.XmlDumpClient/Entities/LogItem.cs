@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace Msz2001.MediaWikiDump.XmlDumpClient.Entities
 {
-    public class LogItem(string? rawParams)
+    public class LogItem(string? rawParams) : IDumpEntry
     {
         public required uint Id { get; init; }
         public required Timestamp Timestamp { get; init; }
