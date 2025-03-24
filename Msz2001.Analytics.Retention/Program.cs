@@ -1,50 +1,126 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Globalization;
+using System.Numerics;
 
-using Msz2001.Analytics.Retention.Extractors;
-using Msz2001.Analytics.Retention.Instrumentation;
-using Msz2001.MediaWikiDump.XmlDumpClient;
+using Microsoft.Extensions.Logging;
 
-using System.IO.Compression;
-using System.Xml;
+using Msz2001.Analytics.Retention.Classifiers;
+using Msz2001.Analytics.Retention.Processors;
 
 namespace Msz2001.Analytics.Retention
 {
     internal class Program
     {
-        static void Main2(string[] args)
+        static void Main(string[] args)
         {
-            // var logPath = @"D:\Dokumenty\Wikipedia\retention\dumps\plwikinews-20241201-pages-logging.xml.gz";
-            var pagesPath = @"D:\Dokumenty\Wikipedia\retention\dumps\plwikinews-20241201-stub-meta-history.xml.gz";
+            var wikiDB = "plwikinews";
+            var blockLogFile = @$"D:\dumps\{wikiDB}-20250301-pages-logging.xml.gz";
+            var rawOutputFile = @$"D:\{wikiDB}.tsv";
+            var classFileTemplate = @$"D:\{wikiDB}.%sgn%.tsv";
 
-            // var outputPath = @"D:\regdates.tsv";
+            var logger = ConfigureLogger();
+            using var blockedUsersProcessor = new BlockedUsersProcessor(blockLogFile, logger);
+            var blockedUsers = blockedUsersProcessor.Process();
 
-            if (args.Length < 2)
+            var userEditsProcessor = new UserEditsProcessor(wikiDB, logger);
+            var userDatas = userEditsProcessor.Process();
+
+            foreach (var (_, data) in userDatas)
             {
-                Console.WriteLine("Usage: Msz2001.Analytics.Retention <logPath> <outputPath>");
-                return;
+                if (blockedUsers.TryGetValue(data.UserName, out var blocks))
+                {
+                    data.BlockDuration = (from block in blocks
+                                          where block.Start <= data.RegistrationPlus2Months
+                                            || data.RegistrationPlus2Months is null
+                                          select block.Duration)
+                                         .Aggregate(TimeSpan.Zero, (t1, t2) => t1 + t2);
+                }
             }
-            ILogger logger = ConfigureLogger();
 
-            var logPath = pagesPath; // args[0];
-            var outputPath = args[1];
+            using var rawFileStream = File.OpenWrite(rawOutputFile);
+            using var rawWriter = new StreamWriter(rawFileStream);
 
-            using var fileStream = new FileStream(logPath, FileMode.Open, FileAccess.Read);
-            using var stream = new GZipStream(fileStream, CompressionMode.Decompress);
-            var xmlReader = XmlReader.Create(stream);
-            var logReader = new PageDumpReader(xmlReader, logger);
+            WriteCells(
+                rawWriter,
+                "UserId",
+                "UserName",
+                "RegistrationDate",
+                "FirstEditDate",
+                "TotalEdits",
+                "Edits_reg1d",
+                "Edits_regm2",
+                "Edits_1em2",
+                "IsBot",
+                "IsCrossWiki",
+                "BlockDays"
+            );
+            
+            foreach (var (userId, userData) in userDatas)
+            {
+                WriteCells(
+                    rawWriter,
+                    userId,
+                    userData.UserName,
+                    TimestampToString(userData.RegistrationDate),
+                    TimestampToString(userData.FirstEditDate),
+                    userData.TotalEdits,
+                    userData.Edits_reg1d,
+                    userData.Edits_regm2,
+                    userData.Edits_1em2,
+                    userData.IsBot,
+                    userData.IsCrossWiki,
+                    userData.BlockDays.ToString("F3")
+                );
+            }
 
-            using var streamWriter = new StreamWriter(outputPath);
-            //var registrationDates = new RegistrationDates(streamWriter, logger);
-            var registrationDates = new FirstEdits(streamWriter, logger);
+            var classifiers = new Dictionary<string, IClassifier>
+            {
+                { "wmf", new WmfClassifier() },
+                { "msz", new MszClassifier() }
+            };
 
-            var instrumentator = new DumpInstrumentator(logger);
+            foreach (var (key, classifier) in classifiers)
+            {
+                var classifiedFile = classFileTemplate.Replace("%sgn%", key);
+                var monthlyCounts = new Dictionary<string, Dictionary<string, uint>>();
 
-            var start = DateTime.Now;
-            instrumentator.ProcessDump(logReader, [registrationDates]);
-            var end = DateTime.Now;
+                foreach (var user in userDatas.Values)
+                {
+                    var userClass = classifier.Classify(user);
+                    var userMonth = user.GetBaselineDate()?.ToString("yyyy-MM");
+                    if (userMonth is null)
+                        continue;
 
-            var duration = end - start;
-            logger.LogInformation("Finished run, duration: {duration}", duration);
+                    if (!monthlyCounts.TryGetValue(userMonth, out var classCounts))
+                    {
+                        classCounts = [];
+                        foreach (var className in classifier.Classes)
+                        {
+                            classCounts[className] = 0;
+                        }
+                        monthlyCounts[userMonth] = classCounts;
+                    }
+                    classCounts[userClass]++;
+                }
+
+                using var classFileStream = File.Open(classifiedFile, FileMode.Create, FileAccess.Write);
+                using var classWriter = new StreamWriter(classFileStream);
+
+                classWriter.Write("Month");
+                foreach (var className in classifier.Classes)
+                {
+                    classWriter.Write("\t" + className);
+                }
+                classWriter.WriteLine();
+                foreach (var (month, userClasses) in monthlyCounts.OrderBy(e => e.Key))
+                {
+                    classWriter.Write(month);
+                    foreach (var className in classifier.Classes)
+                    {
+                        classWriter.Write("\t" + userClasses[className]);
+                    }
+                    classWriter.WriteLine();
+                }
+            }
         }
 
         static ILogger ConfigureLogger()
@@ -53,7 +129,17 @@ namespace Msz2001.Analytics.Retention
             {
                 builder.AddConsole();
             });
-            return loggerFactory.CreateLogger<Program>();
+            return loggerFactory.CreateLogger<Program2>();
+        }
+
+        private static void WriteCells(StreamWriter writer, params object[] columns)
+        {
+            writer.WriteLine(string.Join("\t", columns));
+        }
+
+        private static string TimestampToString(DateTime? timestamp)
+        {
+            return timestamp?.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'", CultureInfo.InvariantCulture) ?? "";
         }
     }
 }
