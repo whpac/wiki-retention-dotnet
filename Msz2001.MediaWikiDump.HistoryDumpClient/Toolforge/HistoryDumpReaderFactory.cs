@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Msz2001.MediaWikiDump.HistoryDumpClient.Toolforge
 {
-    public class HistoryDumpReaderFactory(ILogger logger, string dumpDirectory = "/public/dumps/public/other/mediawiki_history")
+    public class HistoryDumpReaderFactory(ILoggerFactory loggerFactory, string dumpDirectory = "/public/dumps/public/other/mediawiki_history")
     {
         public HistoryDumpReader CreateReader(string wikiDB)
         {
@@ -31,7 +31,7 @@ namespace Msz2001.MediaWikiDump.HistoryDumpClient.Toolforge
 
             var dumpFiles = Directory.GetFiles(wikiDirectory, "*.tsv.bz2");
             dumpFiles = [.. dumpFiles.OrderBy(name => name)];
-            return new HistoryDumpReader(dumpFiles, logger);
+            return new HistoryDumpReader(dumpFiles, loggerFactory);
         }
 
         public string GetNewestMonth()

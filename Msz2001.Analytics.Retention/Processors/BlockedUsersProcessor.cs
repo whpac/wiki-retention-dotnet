@@ -19,9 +19,9 @@ namespace Msz2001.Analytics.Retention.Processors
         private FileStream fileStream;
         private GZipStream gzipStream;
 
-        public BlockedUsersProcessor(string logPath, ILogger logger)
+        public BlockedUsersProcessor(string logPath, ILoggerFactory loggerFactory)
         {
-            this.logger = logger;
+            logger = loggerFactory.CreateLogger<BlockedUsersProcessor>();
 
             fileStream = new FileStream(logPath, FileMode.Open, FileAccess.Read);
             gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);

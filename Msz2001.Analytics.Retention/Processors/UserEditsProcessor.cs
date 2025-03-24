@@ -2,27 +2,18 @@
 
 using Msz2001.Analytics.Retention.Data;
 using Msz2001.MediaWikiDump.HistoryDumpClient.Entities;
-using Msz2001.MediaWikiDump.HistoryDumpClient.Toolforge;
+using Msz2001.MediaWikiDump.HistoryDumpClient.Reader;
 
 using System.Numerics;
 
 namespace Msz2001.Analytics.Retention.Processors
 {
-    internal partial class UserEditsProcessor
+    internal partial class UserEditsProcessor(HistoryDumpReader dumpReader, ILoggerFactory loggerFactory)
     {
-        private ILogger logger;
-        private string wikiDB;
-
-        public UserEditsProcessor(string wikiDB, ILogger logger)
-        {
-            this.wikiDB = wikiDB;
-            this.logger = logger;
-        }
+        private readonly ILogger logger = loggerFactory.CreateLogger<UserEditsProcessor>();
 
         public Dictionary<BigInteger, UserData> Process()
         {
-            var readerFactory = new HistoryDumpReaderFactory(logger, @"D:\dumps"); // TODO
-            var dumpReader = readerFactory.CreateReader(wikiDB);
             Dictionary<BigInteger, UserData> userDatas = [];
 
             int i = 0;

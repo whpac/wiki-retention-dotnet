@@ -4,18 +4,14 @@ using Microsoft.Extensions.Logging;
 
 using Msz2001.MediaWikiDump.HistoryDumpClient.Entities;
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Msz2001.MediaWikiDump.HistoryDumpClient.Reader
 {
-    public partial class HistoryDumpReader(string[] dumpPaths, ILogger logger)
+    public partial class HistoryDumpReader(string[] dumpPaths, ILoggerFactory loggerFactory)
     {
-        public HistoryDumpReader(string dumpPath, ILogger logger) : this([ dumpPath ], logger) { }
+        private readonly ILogger logger = loggerFactory.CreateLogger<HistoryDumpReader>();
+
+        public HistoryDumpReader(string dumpPath, ILoggerFactory loggerFactory) : this([ dumpPath ], loggerFactory) { }
 
         public IEnumerable<HistoryDumpEntry> ReadEntries()
         {
