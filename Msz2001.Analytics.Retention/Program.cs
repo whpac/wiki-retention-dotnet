@@ -31,15 +31,20 @@ namespace Msz2001.Analytics.Retention
 
             var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
 
-            var logReaderFactory = new LogDumpReaderFactory(loggerFactory);
+            var logReaderFactory = new LogDumpReaderFactory(loggerFactory, @"D:\dumps");
             var logReader = logReaderFactory.CreateReader(wikiDB);
             var blockedUsersProcessor = new BlockedUsersProcessor(logReader, loggerFactory);
             var blockedUsers = blockedUsersProcessor.Process();
 
-            var historyReaderFactory = new HistoryDumpReaderFactory(loggerFactory);
+            var historyReaderFactory = new HistoryDumpReaderFactory(loggerFactory, @"D:\dumps");
             var historyReader = historyReaderFactory.CreateReader(wikiDB);
             var userEditsProcessor = new UserEditsProcessor(historyReader, loggerFactory);
             var userDatas = userEditsProcessor.Process();
+
+            // Checks ensure that two infinite blocks don't overflow the counter
+            static TimeSpan addTimeSpans(TimeSpan t1, TimeSpan t2) =>
+                t1 == TimeSpan.MaxValue || t2 == TimeSpan.MaxValue ? TimeSpan.MaxValue :
+                t1 + t2;
 
             foreach (var (_, data) in userDatas)
             {
@@ -49,7 +54,7 @@ namespace Msz2001.Analytics.Retention
                                           where block.Start <= data.FirstEditPlus2Months
                                             || data.FirstEditPlus2Months is null
                                           select block.Duration)
-                                         .Aggregate(TimeSpan.Zero, (t1, t2) => t1 + t2);
+                                         .Aggregate(TimeSpan.Zero, addTimeSpans);
                 }
             }
 
