@@ -4,6 +4,7 @@ using Msz2001.MediaWikiDump.HistoryDumpClient.Reader;
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,7 +38,12 @@ namespace Msz2001.MediaWikiDump.HistoryDumpClient.Toolforge
         public string GetNewestMonth()
         {
             var subdirs = Directory.GetDirectories(dumpDirectory);
-            var newest = subdirs.OrderByDescending(name => name).FirstOrDefault();
+            var newest = subdirs
+                .Select(name => new DirectoryInfo(name).Name)
+                .Where(name => DateTime.TryParseExact(name, "yyyy-MM",
+                    CultureInfo.InvariantCulture, DateTimeStyles.None, out var _))
+                .OrderByDescending(name => name)
+                .FirstOrDefault();
 
             if (newest != null) {
                 return newest;

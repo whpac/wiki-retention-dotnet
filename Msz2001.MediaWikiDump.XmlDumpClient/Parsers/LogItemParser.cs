@@ -11,9 +11,10 @@ using System.Xml.Linq;
 
 namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
 {
-    internal partial class LogItemParser(ILogger Logger)
+    internal partial class LogItemParser(ILoggerFactory loggerFactory)
     {
-        private readonly UserParser UserParser = new(Logger);
+        private readonly ILogger logger = loggerFactory.CreateLogger<LogItemParser>();
+        private readonly UserParser UserParser = new(loggerFactory);
 
         internal LogItem Parse(XElement elem, SiteInfo siteinfo)
         {
@@ -61,7 +62,7 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
                         // We don't have to do anything, just suppress the warning
                         break;
                     default:
-                        LogUnexpectedChildTag(Logger, id, child.Name.LocalName);
+                        LogUnexpectedChildTag(logger, id, child.Name.LocalName);
                         break;
                 }
             }

@@ -11,8 +11,10 @@ using System.Xml.Linq;
 
 namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
 {
-    internal partial class UserParser(ILogger Logger)
+    internal partial class UserParser(ILoggerFactory loggerFactory)
     {
+        private readonly ILogger logger = loggerFactory.CreateLogger<UserParser>();
+
         internal User Parse(XElement elem)
         {
             uint? id = null;
@@ -32,7 +34,7 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
                         ip = child.Value;
                         break;
                     default:
-                        LogUnexpectedChildTag(Logger, id, child.Name.LocalName);
+                        LogUnexpectedChildTag(logger, id, child.Name.LocalName);
                         break;
                 }
             }

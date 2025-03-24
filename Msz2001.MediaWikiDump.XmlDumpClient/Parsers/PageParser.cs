@@ -11,9 +11,10 @@ using System.Xml.Linq;
 
 namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
 {
-    internal partial class PageParser(ILogger Logger)
+    internal partial class PageParser(ILoggerFactory loggerFactory)
     {
-        private readonly RevisionParser RevisionParser = new(Logger);
+        private readonly ILogger logger = loggerFactory.CreateLogger<PageParser>();
+        private readonly RevisionParser RevisionParser = new(loggerFactory);
 
         internal Page Parse(XElement elem, SiteInfo siteInfo)
         {
@@ -40,7 +41,7 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
                         // We don't use <redirect title="" /> for now
                         break;
                     default:
-                        LogUnexpectedChildTag(Logger, id, child.Name.LocalName);
+                        LogUnexpectedChildTag(logger, id, child.Name.LocalName);
                         break;
                 }
             }

@@ -5,29 +5,13 @@ using Msz2001.Analytics.Retention.Utils;
 using Msz2001.MediaWikiDump.XmlDumpClient;
 using Msz2001.MediaWikiDump.XmlDumpClient.Entities;
 
-using System.IO.Compression;
 using System.Text.RegularExpressions;
-using System.Xml;
 
 namespace Msz2001.Analytics.Retention.Processors
 {
-    internal partial class BlockedUsersProcessor : IDisposable
+    internal partial class BlockedUsersProcessor(LogDumpReader logReader, ILoggerFactory loggerFactory)
     {
-        private readonly LogDumpReader logReader;
-        private readonly ILogger logger;
-
-        private FileStream fileStream;
-        private GZipStream gzipStream;
-
-        public BlockedUsersProcessor(string logPath, ILoggerFactory loggerFactory)
-        {
-            logger = loggerFactory.CreateLogger<BlockedUsersProcessor>();
-
-            fileStream = new FileStream(logPath, FileMode.Open, FileAccess.Read);
-            gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
-            var xmlReader = XmlReader.Create(gzipStream);
-            logReader = new LogDumpReader(xmlReader, logger);
-        }
+        private readonly ILogger logger = loggerFactory.CreateLogger<BlockedUsersProcessor>();
 
         public Dictionary<string, List<BlockSpan>> Process()
         {
@@ -152,12 +136,6 @@ namespace Msz2001.Analytics.Retention.Processors
         {
             var memory = Environment.WorkingSet / (1024.0 * 1024.0);
             LogProcessingProgress(logger, iteration, memory);
-        }
-
-        public void Dispose()
-        {
-            gzipStream.Dispose();
-            fileStream.Dispose();
         }
 
         // Is seems that MediaWiki uses a similar regex for IPv4

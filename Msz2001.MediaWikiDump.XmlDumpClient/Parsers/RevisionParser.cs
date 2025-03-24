@@ -11,9 +11,10 @@ using System.Xml.Linq;
 
 namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
 {
-    internal partial class RevisionParser(ILogger Logger)
+    internal partial class RevisionParser(ILoggerFactory loggerFactory)
     {
-        private readonly UserParser UserParser = new(Logger);
+        private readonly ILogger logger = loggerFactory.CreateLogger<RevisionParser>();
+        private readonly UserParser UserParser = new(loggerFactory);
 
         internal Revision Parse(XElement elem)
         {
@@ -66,7 +67,7 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
                     case "origin":
                         break; // Ignore without triggering warnings. What's origin?
                     default:
-                        LogUnexpectedChildTag(Logger, id, child.Name.LocalName);
+                        LogUnexpectedChildTag(logger, id, child.Name.LocalName);
                         break;
                 }
             }

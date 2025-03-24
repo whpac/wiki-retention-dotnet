@@ -7,6 +7,7 @@ using Msz2001.Analytics.Retention.Classifiers;
 using Msz2001.Analytics.Retention.Processors;
 using Msz2001.Analytics.Retention.Writers;
 using Msz2001.MediaWikiDump.HistoryDumpClient.Toolforge;
+using Msz2001.MediaWikiDump.XmlDumpClient.Toolforge;
 
 namespace Msz2001.Analytics.Retention
 {
@@ -15,18 +16,19 @@ namespace Msz2001.Analytics.Retention
         static void Main(string[] args)
         {
             var wikiDB = "plwikinews";
-            var blockLogFile = @$"D:\dumps\{wikiDB}-20250301-pages-logging.xml.gz";
             var rawOutputFile = @$"D:\{wikiDB}.tsv";
             var classFileTemplate = @$"D:\{wikiDB}.%sgn%.tsv";
 
             var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
 
-            using var blockedUsersProcessor = new BlockedUsersProcessor(blockLogFile, loggerFactory);
+            var logReaderFactory = new LogDumpReaderFactory(loggerFactory, @"D:\dumps");
+            var logReader = logReaderFactory.CreateReader(wikiDB);
+            var blockedUsersProcessor = new BlockedUsersProcessor(logReader, loggerFactory);
             var blockedUsers = blockedUsersProcessor.Process();
 
-            HistoryDumpReaderFactory readerFactory = new(loggerFactory, @"D:\dumps");
-            var dumpReader = readerFactory.CreateReader(wikiDB);
-            var userEditsProcessor = new UserEditsProcessor(dumpReader, loggerFactory);
+            var historyReaderFactory = new HistoryDumpReaderFactory(loggerFactory, @"D:\dumps");
+            var historyReader = historyReaderFactory.CreateReader(wikiDB);
+            var userEditsProcessor = new UserEditsProcessor(historyReader, loggerFactory);
             var userDatas = userEditsProcessor.Process();
 
             foreach (var (_, data) in userDatas)

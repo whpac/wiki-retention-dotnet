@@ -13,9 +13,9 @@ using System.Xml.Linq;
 
 namespace Msz2001.MediaWikiDump.XmlDumpClient
 {
-    public class PageDumpReader(XmlReader xmlReader, ILogger logger) : DumpReader<Page>(xmlReader, logger)
+    public class PageDumpReader(XmlReader xmlReader, ILoggerFactory loggerFactory) : DumpReader<Page>(xmlReader, loggerFactory)
     {
-        private readonly PageParser PageParser = new(logger);
+        private readonly PageParser PageParser = new(loggerFactory);
 
         protected override Page? ProcessContentElement(XElement element, SiteInfo siteinfo)
         {

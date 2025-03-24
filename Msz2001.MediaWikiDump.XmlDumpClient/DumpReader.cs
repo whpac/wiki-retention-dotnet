@@ -14,9 +14,10 @@ using System.Xml.Linq;
 
 namespace Msz2001.MediaWikiDump.XmlDumpClient
 {
-    public abstract partial class DumpReader<TContent>(XmlReader XmlReader, ILogger Logger) where TContent : IDumpEntry
+    public abstract partial class DumpReader<TContent>(XmlReader XmlReader, ILoggerFactory loggerFactory) where TContent : IDumpEntry
     {
-        private readonly SiteInfoParser SiteInfoParser = new(Logger);
+        private readonly ILogger logger = loggerFactory.CreateLogger<DumpReader<TContent>>();
+        private readonly SiteInfoParser SiteInfoParser = new(loggerFactory);
         protected SiteInfo? SiteInfo { get; private set; }
 
         public IEnumerable<TContent> GetItems()
@@ -51,7 +52,7 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient
                             }
                             catch (Exception ex)
                             {
-                                LogProcessingFailed(Logger, element.Name.LocalName, ex);
+                                LogProcessingFailed(logger, element.Name.LocalName, ex);
                                 continue;
                             }
 
@@ -74,7 +75,7 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient
                             }
                             catch (Exception ex)
                             {
-                                LogProcessingFailed(Logger, element.Name.LocalName, ex);
+                                LogProcessingFailed(logger, element.Name.LocalName, ex);
                                 continue;
                             }
 
