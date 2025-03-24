@@ -30,13 +30,14 @@ namespace Msz2001.Analytics.Retention
             var resultDir = args[1];
 
             var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+            var logger = loggerFactory.CreateLogger<Program>();
 
-            var logReaderFactory = new LogDumpReaderFactory(loggerFactory, @"D:\dumps");
+            var logReaderFactory = new LogDumpReaderFactory(loggerFactory);
             var logReader = logReaderFactory.CreateReader(wikiDB);
             var blockedUsersProcessor = new BlockedUsersProcessor(logReader, loggerFactory);
             var blockedUsers = blockedUsersProcessor.Process();
 
-            var historyReaderFactory = new HistoryDumpReaderFactory(loggerFactory, @"D:\dumps");
+            var historyReaderFactory = new HistoryDumpReaderFactory(loggerFactory);
             var historyReader = historyReaderFactory.CreateReader(wikiDB);
             var userEditsProcessor = new UserEditsProcessor(historyReader, loggerFactory);
             var userDatas = userEditsProcessor.Process();
@@ -48,13 +49,20 @@ namespace Msz2001.Analytics.Retention
 
             foreach (var (_, data) in userDatas)
             {
-                if (blockedUsers.TryGetValue(data.UserName, out var blocks))
+                try
                 {
-                    data.BlockDuration = (from block in blocks
-                                          where block.Start <= data.FirstEditPlus2Months
-                                            || data.FirstEditPlus2Months is null
-                                          select block.Duration)
-                                         .Aggregate(TimeSpan.Zero, addTimeSpans);
+                    if (blockedUsers.TryGetValue(data.UserName, out var blocks))
+                    {
+                        data.BlockDuration = (from block in blocks
+                                              where block.Start <= data.FirstEditPlus2Months
+                                                || data.FirstEditPlus2Months is null
+                                              select block.Duration)
+                                             .Aggregate(TimeSpan.Zero, addTimeSpans);
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Failed to process blocks for user {UserName}", data.UserName);
                 }
             }
 
@@ -69,25 +77,32 @@ namespace Msz2001.Analytics.Retention
 
             foreach (var (key, classifier) in classifiers)
             {
-                var classifiedFile = Path.Combine(resultDir, $"{wikiDB}.{key}.tsv");
-                var monthlyCounts = new Dictionary<string, Dictionary<string, uint>>();
-
-                foreach (var user in userDatas.Values)
+                try
                 {
-                    var userClass = classifier.Classify(user);
-                    var userMonth = user.GetBaselineDate()?.ToString("yyyy-MM");
-                    if (userMonth is null)
-                        continue;
+                    var classifiedFile = Path.Combine(resultDir, $"{wikiDB}.{key}.tsv");
+                    var monthlyCounts = new Dictionary<string, Dictionary<string, uint>>();
 
-                    if (!monthlyCounts.TryGetValue(userMonth, out var classCounts))
+                    foreach (var user in userDatas.Values)
                     {
-                        monthlyCounts[userMonth] = classCounts =
-                            classifier.Classes.ToDictionary(className => className, _ => 0u);
-                    }
-                    classCounts[userClass]++;
-                }
+                        var userClass = classifier.Classify(user);
+                        var userMonth = user.GetBaselineDate()?.ToString("yyyy-MM");
+                        if (userMonth is null)
+                            continue;
 
-                ClassWriter.Write(classifiedFile, classifier.Classes, monthlyCounts);
+                        if (!monthlyCounts.TryGetValue(userMonth, out var classCounts))
+                        {
+                            monthlyCounts[userMonth] = classCounts =
+                                classifier.Classes.ToDictionary(className => className, _ => 0u);
+                        }
+                        classCounts[userClass]++;
+                    }
+
+                    ClassWriter.Write(classifiedFile, classifier.Classes, monthlyCounts);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Failed to classify users with `{Classifier}`", key);
+                }
             }
 
             return 0;
