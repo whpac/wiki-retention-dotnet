@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Msz2001.MediaWikiDump.HistoryDumpClient.Entities.RawValues;
+
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -10,45 +12,48 @@ namespace Msz2001.MediaWikiDump.HistoryDumpClient.Entities
 {
     public class RevisionHistoryDumpEntry : PageHistoryDumpEntry
     {
-        public BigInteger RevisionId { get; }
-        public BigInteger? RevisionParentId { get; }
+        public long RevisionId { get; }
+        public long? RevisionParentId { get; }
         public bool RevisionMinorEdit { get; }
-        public string[] RevisionDeletedParts { get; }
+        private RawArray revisionDeletedPartsRaw;
+        public string[] RevisionDeletedParts => revisionDeletedPartsRaw.Value;
         public bool RevisionDeletedPartsSuppressed { get; }
-        public BigInteger? RevisionTextBytes { get; }
-        public BigInteger? RevisionTextBytesDiff { get; }
+        public long? RevisionTextBytes { get; }
+        public long? RevisionTextBytesDiff { get; }
         public string RevisionTextSha1 { get; }
         public string RevisionContentModel { get; }
         public string RevisionContentFormat { get; }
         public bool RevisionIsDeletedByPageDeletion { get; }
-        public DateTime? RevisionDeletedByPageDeletionTimestamp { get; }
+        private RawDateTime revisionDeletedByPageDeletionTimestampRaw;
+        public DateTime? RevisionDeletedByPageDeletionTimestamp => revisionDeletedByPageDeletionTimestampRaw.Value;
         public bool RevisionIsIdentityReverted { get; }
-        public BigInteger? RevisionFirstIdentityRevertingRevisionId { get; }
-        public BigInteger? RevisionSecondsToIdentityRevert { get; }
+        public long? RevisionFirstIdentityRevertingRevisionId { get; }
+        public long? RevisionSecondsToIdentityRevert { get; }
         public bool RevisionIsIdentityRevert { get; }
         public bool RevisionIsFromBeforePageCreation { get; }
-        public string[] RevisionTags { get; }
+        private RawArray revisionTagsRaw;
+        public string[] RevisionTags => revisionTagsRaw.Value;
 
         internal RevisionHistoryDumpEntry(string[] columns) : base(columns)
         {
-            RevisionId = ParseBigInt(columns[56]);
-            RevisionParentId = ParseBigIntNullable(columns[57]);
+            RevisionId = ParseLong(columns[56]);
+            RevisionParentId = ParseLongNullable(columns[57]);
             RevisionMinorEdit = ParseBool(columns[58]);
-            RevisionDeletedParts = ParseArray(columns[59]);
+            revisionDeletedPartsRaw = new RawArray(columns[59]);
             RevisionDeletedPartsSuppressed = ParseBool(columns[60]);
-            RevisionTextBytes = ParseBigIntNullable(columns[61]);
-            RevisionTextBytesDiff = ParseBigIntNullable(columns[62]);
+            RevisionTextBytes = ParseLongNullable(columns[61]);
+            RevisionTextBytesDiff = ParseLongNullable(columns[62]);
             RevisionTextSha1 = columns[63];
             RevisionContentModel = columns[64];
             RevisionContentFormat = columns[65];
             RevisionIsDeletedByPageDeletion = ParseBool(columns[66]);
-            RevisionDeletedByPageDeletionTimestamp = ParseTimestampNullable(columns[67]);
+            revisionDeletedByPageDeletionTimestampRaw = new RawDateTime(columns[67]);
             RevisionIsIdentityReverted = ParseBool(columns[68]);
-            RevisionFirstIdentityRevertingRevisionId = ParseBigIntNullable(columns[69]);
-            RevisionSecondsToIdentityRevert = ParseBigIntNullable(columns[70]);
+            RevisionFirstIdentityRevertingRevisionId = ParseLongNullable(columns[69]);
+            RevisionSecondsToIdentityRevert = ParseLongNullable(columns[70]);
             RevisionIsIdentityRevert = ParseBool(columns[71]);
             RevisionIsFromBeforePageCreation = ParseBool(columns[72]);
-            RevisionTags = ParseArray(columns[73]);
+            revisionTagsRaw = new RawArray(columns[73]);
         }
     }
 }
