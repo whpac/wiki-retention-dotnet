@@ -11,10 +11,10 @@ namespace Msz2001.Analytics.Retention
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static void Main2(string[] args)
         {
             // var logPath = @"D:\Dokumenty\Wikipedia\retention\dumps\plwikinews-20241201-pages-logging.xml.gz";
-            // var pagesPath = @"D:\Dokumenty\Wikipedia\retention\dumps\plwikinews-20241201-stub-meta-history.xml.gz";
+            var pagesPath = @"D:\Dokumenty\Wikipedia\retention\dumps\plwikinews-20241201-stub-meta-history.xml.gz";
 
             // var outputPath = @"D:\regdates.tsv";
 
@@ -25,16 +25,17 @@ namespace Msz2001.Analytics.Retention
             }
             ILogger logger = ConfigureLogger();
 
-            var logPath = args[0];
+            var logPath = pagesPath; // args[0];
             var outputPath = args[1];
 
             using var fileStream = new FileStream(logPath, FileMode.Open, FileAccess.Read);
             using var stream = new GZipStream(fileStream, CompressionMode.Decompress);
             var xmlReader = XmlReader.Create(stream);
-            var logReader = new LogDumpReader(xmlReader, logger);
+            var logReader = new PageDumpReader(xmlReader, logger);
 
             using var streamWriter = new StreamWriter(outputPath);
-            var registrationDates = new RegistrationDates(streamWriter, logger);
+            //var registrationDates = new RegistrationDates(streamWriter, logger);
+            var registrationDates = new FirstEdits(streamWriter, logger);
 
             var instrumentator = new DumpInstrumentator(logger);
 
@@ -43,7 +44,7 @@ namespace Msz2001.Analytics.Retention
             var end = DateTime.Now;
 
             var duration = end - start;
-            Console.WriteLine($"Duration: {duration}");
+            logger.LogInformation("Finished run, duration: {duration}", duration);
         }
 
         static ILogger ConfigureLogger()

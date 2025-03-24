@@ -34,6 +34,11 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
                     case "revision":
                         revisions.Add(RevisionParser.Parse(child));
                         break;
+                    case "ns":
+                    case "redirect":
+                        // Ignore namespace, it's in title
+                        // We don't use <redirect title="" /> for now
+                        break;
                     default:
                         LogUnexpectedChildTag(Logger, id, child.Name.LocalName);
                         break;
