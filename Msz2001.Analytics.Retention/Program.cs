@@ -13,20 +13,30 @@ namespace Msz2001.Analytics.Retention
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
-            var wikiDB = "plwikinews";
-            var rawOutputFile = @$"D:\{wikiDB}.tsv";
-            var classFileTemplate = @$"D:\{wikiDB}.%sgn%.tsv";
+            if (args.Length < 2)
+            {
+                Console.WriteLine();
+                Console.WriteLine("Usage: Msz2001.Analytics.Retention <wikiDB> <outputDir>");
+                Console.WriteLine();
+                Console.WriteLine("  wikiDB     - name of the wiki database to process");
+                Console.WriteLine("  outputDir  - where to save the result files");
+                Console.WriteLine();
+                return 1;
+            }
+
+            var wikiDB = args[0];
+            var resultDir = args[1];
 
             var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
 
-            var logReaderFactory = new LogDumpReaderFactory(loggerFactory, @"D:\dumps");
+            var logReaderFactory = new LogDumpReaderFactory(loggerFactory);
             var logReader = logReaderFactory.CreateReader(wikiDB);
             var blockedUsersProcessor = new BlockedUsersProcessor(logReader, loggerFactory);
             var blockedUsers = blockedUsersProcessor.Process();
 
-            var historyReaderFactory = new HistoryDumpReaderFactory(loggerFactory, @"D:\dumps");
+            var historyReaderFactory = new HistoryDumpReaderFactory(loggerFactory);
             var historyReader = historyReaderFactory.CreateReader(wikiDB);
             var userEditsProcessor = new UserEditsProcessor(historyReader, loggerFactory);
             var userDatas = userEditsProcessor.Process();
@@ -43,6 +53,7 @@ namespace Msz2001.Analytics.Retention
                 }
             }
 
+            var rawOutputFile = Path.Combine(resultDir, wikiDB + ".tsv");
             UserDataWriter.Write(rawOutputFile, userDatas);
 
             var classifiers = new Dictionary<string, IClassifier>
@@ -53,7 +64,7 @@ namespace Msz2001.Analytics.Retention
 
             foreach (var (key, classifier) in classifiers)
             {
-                var classifiedFile = classFileTemplate.Replace("%sgn%", key);
+                var classifiedFile = Path.Combine(resultDir, $"{wikiDB}.{key}.tsv");
                 var monthlyCounts = new Dictionary<string, Dictionary<string, uint>>();
 
                 foreach (var user in userDatas.Values)
@@ -73,6 +84,8 @@ namespace Msz2001.Analytics.Retention
 
                 ClassWriter.Write(classifiedFile, classifier.Classes, monthlyCounts);
             }
+
+            return 0;
         }
     }
 }

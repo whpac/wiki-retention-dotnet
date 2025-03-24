@@ -2,7 +2,7 @@
   "profiles": {
     "Msz2001.Analytics.Retention": {
       "commandName": "Project",
-      "commandLineArgs": "\"D:\\Dokumenty\\Wikipedia\\retention\\dumps\\plwikinews-20241201-pages-logging.xml.gz\"\r\n\"D:\\test.tsv\""
+      "commandLineArgs": "plwikinews D:\\"
     }
   }
 }
