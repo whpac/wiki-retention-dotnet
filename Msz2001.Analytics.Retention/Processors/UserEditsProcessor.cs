@@ -63,7 +63,7 @@ namespace Msz2001.Analytics.Retention.Processors
 
                 if (entry is UserHistoryDumpEntry userEntry && entry.EventType == "create")
                 {
-                    userData.IsBot |= userEntry.UserIsBotByHistorical.Length > 0;
+                    userData.IsBot |= userEntry.UserIsBotByHistorical.Any(x => x == "group");
                     userData.IsCrossWiki |=
                         userEntry.UserIsCreatedBySystem == true
                         && userData.RegistrationDate < userData.FirstEditDate;
