@@ -12,7 +12,8 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
         internal static object? Deserialize(string input)
         {
             int position = 0;
-            return DeserializeInner(input.AsSpan(), ref position);
+            var bytes = Encoding.UTF8.GetBytes(input);
+            return DeserializeInner(bytes, ref position);
         }
 
         internal static bool TryDeserialize(string input, out object? result)
@@ -29,36 +30,36 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
             }
         }
 
-        private static object? DeserializeInner(ReadOnlySpan<char> input, ref int position)
+        private static object? DeserializeInner(ReadOnlySpan<byte> input, ref int position)
         {
-            char type = input[position];
+            byte type = input[position];
 
             // For nulls, it's the place where the next value starts,
             // For others it's the place where the value or metadata start.
             position += 2;
 
-            if (type == 'N')
+            if (type == 78) // 'N'
                 return null;
 
             int valueStart = position;
-            char c;
+            byte c;
             do
             {
                 c = input[position];
                 position++;
             } while (c != ';' && c != ':');
 
-            var value = input[valueStart..(position - 1)];
+            var value = Encoding.UTF8.GetString(input[valueStart..(position - 1)]);
 
             switch (type)
             {
-                case 'N':
+                case 78: // 'N'
                     return null;
-                case 'b':
+                case 98: // 'b'
                     return value[0] == '1';
-                case 'i':
+                case 105: // 'i
                     return int.Parse(value);
-                case 'd':
+                case 100: // 'd'
                     return value switch
                     {
                         "NAN" => double.NaN,
@@ -66,13 +67,13 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
                         "-INF" => double.NegativeInfinity,
                         _ => (object)double.Parse(value),
                     };
-                case 's':
+                case 115: // 's'
                     // value is the length of the string
                     position++; // skip the opening quote
-                    var str = input[position..(position+int.Parse(value))];
+                    var bytes = input[position..(position+int.Parse(value))];
                     position += int.Parse(value) + 2; // skip the closing quote and the semicolon
-                    return str.ToString();
-                case 'a':
+                    return Encoding.UTF8.GetString(bytes);
+                case 97: // 'a'
                     // value is the length of the array
                     Dictionary<object, object?> dict = [];
                     position++; // skip the opening brace
@@ -88,7 +89,7 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Parsers
                     }
                     position++; // skip the closing brace
                     return dict;
-                case 'O':
+                case 79: // 'O'
                     throw new NotSupportedException("Deserializing of PHP objects is not supported.");
                 default:
                     throw new NotSupportedException($"Unknown type: {type}");
