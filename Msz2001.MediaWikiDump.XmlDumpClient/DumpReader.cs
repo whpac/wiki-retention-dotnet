@@ -18,7 +18,7 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient
     {
         private readonly ILogger logger = loggerFactory.CreateLogger<DumpReader<TContent>>();
         private readonly SiteInfoParser SiteInfoParser = new(loggerFactory);
-        protected SiteInfo? SiteInfo { get; private set; }
+        public SiteInfo? SiteInfo { get; private set; }
 
         public IEnumerable<TContent> GetItems()
         {

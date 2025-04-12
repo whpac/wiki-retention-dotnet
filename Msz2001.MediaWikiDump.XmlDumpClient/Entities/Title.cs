@@ -36,5 +36,12 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Entities
 
             return new Title(siteInfo.GetMainNamespace(), text);
         }
+
+        public override string ToString()
+        {
+            if (Namespace.Id == 0)
+                return PageName;
+            return Namespace.Name + ":" + PageName;
+        }
     }
 }

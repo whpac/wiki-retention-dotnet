@@ -39,11 +39,19 @@ namespace Msz2001.MediaWikiDump.XmlDumpClient.Entities
             return false;
         }
 
+        /// <summary>
+        /// Converts the timestamp to a string in the format "yyyy-MM-ddTHH:mm:ssZ".
+        /// </summary>
+        /// <returns>The timestamp in a long format</returns>
         public override string ToString()
         {
             return Value.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'", CultureInfo.InvariantCulture);
         }
 
+        /// <summary>
+        /// Converts the timestamp to a string in the format "yyyyMMddHHmmss".
+        /// </summary>
+        /// <returns>The timestamp is the "MediaWiki database" format</returns>
         public string ToShortString()
         {
             return Value.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);

@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Msz2001.MediaWikiDump.XmlDu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Msz2001.MediaWikiDump.HistoryDumpClient", "Msz2001.MediaWikiDump.HistoryDumpClient\Msz2001.MediaWikiDump.HistoryDumpClient.csproj", "{BB815C4E-6715-4505-8006-FD789445433E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Msz2001.Analytics.PageSurvival", "Msz2001.Analytics.PageSurvival\Msz2001.Analytics.PageSurvival.csproj", "{73F16C1C-AC31-41CF-8DA5-F74A7286B622}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{BB815C4E-6715-4505-8006-FD789445433E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BB815C4E-6715-4505-8006-FD789445433E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BB815C4E-6715-4505-8006-FD789445433E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73F16C1C-AC31-41CF-8DA5-F74A7286B622}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73F16C1C-AC31-41CF-8DA5-F74A7286B622}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73F16C1C-AC31-41CF-8DA5-F74A7286B622}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73F16C1C-AC31-41CF-8DA5-F74A7286B622}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
