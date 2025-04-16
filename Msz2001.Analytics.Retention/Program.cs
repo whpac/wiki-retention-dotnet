@@ -72,7 +72,8 @@ namespace Msz2001.Analytics.Retention
             var classifiers = new Dictionary<string, IClassifier>
             {
                 { "wmf", new WmfClassifier() },
-                { "msz", new MszClassifier() }
+                { "msz", new MszClassifier() },
+                { "cvs", new CvsClassifier() }
             };
 
             foreach (var (key, classifier) in classifiers)

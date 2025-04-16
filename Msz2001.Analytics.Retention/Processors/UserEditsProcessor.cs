@@ -54,6 +54,8 @@ namespace Msz2001.Analytics.Retention.Processors
                         userData.Edits_regm2++;
                     if (editTime > userData.FirstEditPlusMonth && editTime < userData.FirstEditPlus2Months)
                         userData.Edits_1em2++;
+                    if (editTime > userData.FirstEditPlus2Months)
+                        userData.Edits_1eplus60++;
 
                     userData.IsBot |= entry.EventUserIsBotByHistorical.Any(x => x == "group");
                     userData.IsCrossWiki |=

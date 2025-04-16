@@ -23,6 +23,7 @@ namespace Msz2001.Analytics.Retention.Data
         public uint Edits_reg1d = 0;
         public uint Edits_regm2 = 0;
         public uint Edits_1em2 = 0;
+        public uint Edits_1eplus60 = 0; // more than 60 days after first edit
         public uint TotalEdits = 0;
 
         public bool IsBot = false;
