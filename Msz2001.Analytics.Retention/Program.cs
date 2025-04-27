@@ -18,16 +18,26 @@ namespace Msz2001.Analytics.Retention
             if (args.Length < 2)
             {
                 Console.WriteLine();
-                Console.WriteLine("Usage: Msz2001.Analytics.Retention <wikiDB> <outputDir>");
+                Console.WriteLine("Usage: Msz2001.Analytics.Retention <wikiDB> <outputDir> [maxYear]");
                 Console.WriteLine();
                 Console.WriteLine("  wikiDB     - name of the wiki database to process");
                 Console.WriteLine("  outputDir  - where to save the result files");
+                Console.WriteLine("  maxYear    - optional, the maximum year to process (default: current)");
                 Console.WriteLine();
                 return 1;
             }
 
             var wikiDB = args[0];
             var resultDir = args[1];
+            var maxYear = DateTime.Now.Year;
+            if (args.Length > 2)
+            {
+                if (!int.TryParse(args[2], out maxYear))
+                {
+                    Console.WriteLine($"Invalid year: {args[2]}");
+                    return 1;
+                }
+            }
 
             var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
             var logger = loggerFactory.CreateLogger<Program>();
@@ -39,7 +49,10 @@ namespace Msz2001.Analytics.Retention
 
             var historyReaderFactory = new HistoryDumpReaderFactory(loggerFactory);
             var historyReader = historyReaderFactory.CreateReader(wikiDB);
-            var userEditsProcessor = new UserEditsProcessor(historyReader, loggerFactory);
+            var userEditsProcessor = new UserEditsProcessor(historyReader, loggerFactory)
+            {
+                MaxYear = maxYear
+            };
             var userDatas = userEditsProcessor.Process();
 
             // Checks ensure that two infinite blocks don't overflow the counter

@@ -12,6 +12,8 @@ namespace Msz2001.Analytics.Retention.Processors
     {
         private readonly ILogger logger = loggerFactory.CreateLogger<UserEditsProcessor>();
 
+        public int MaxYear { get; set; } = DateTime.Now.Year;
+
         public Dictionary<BigInteger, UserData> Process()
         {
             Dictionary<BigInteger, UserData> userDatas = [];
@@ -27,6 +29,9 @@ namespace Msz2001.Analytics.Retention.Processors
                     continue;
 
                 if (entry.EventUserId is null || entry.EventUserTextHistorical is null)
+                    continue;
+
+                if (entry.EventTimestamp.Year > MaxYear)
                     continue;
 
                 var userId = (BigInteger)entry.EventUserId;
