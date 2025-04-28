@@ -18,6 +18,8 @@ namespace Msz2001.Analytics.Retention.Processors
         {
             Dictionary<BigInteger, UserData> userDatas = [];
 
+            LogProcessingStart(logger, MaxYear);
+
             int i = 0;
             foreach (var entry in dumpReader.ReadEntries())
             {
@@ -90,7 +92,7 @@ namespace Msz2001.Analytics.Retention.Processors
         static partial void LogProcessingProgress(ILogger logger, int iteration, double memory);
 
         [LoggerMessage(Level = LogLevel.Information, Message = "Starting processing; only entries up to year {Year} will be considered")]
-        static partial void LogProcessingProgress(ILogger logger, int year);
+        static partial void LogProcessingStart(ILogger logger, int year);
 
     }
 }
