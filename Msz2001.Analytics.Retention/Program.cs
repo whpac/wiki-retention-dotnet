@@ -37,6 +37,10 @@ namespace Msz2001.Analytics.Retention
                     Console.WriteLine($"Invalid year: {args[2]}");
                     return 1;
                 }
+                else
+                {
+                    Console.WriteLine($"Processing data up to year {maxYear}");
+                }
             }
 
             var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());

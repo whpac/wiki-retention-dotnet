@@ -12,7 +12,7 @@ namespace Msz2001.Analytics.Retention.Processors
     {
         private readonly ILogger logger = loggerFactory.CreateLogger<UserEditsProcessor>();
 
-        public int MaxYear { get; set; } = DateTime.Now.Year;
+        public int MaxYear { get; init; } = DateTime.Now.Year;
 
         public Dictionary<BigInteger, UserData> Process()
         {
@@ -88,6 +88,9 @@ namespace Msz2001.Analytics.Retention.Processors
 
         [LoggerMessage(Level = LogLevel.Information, Message = "Processed {Iteration} entries, using {Memory:F2} MB")]
         static partial void LogProcessingProgress(ILogger logger, int iteration, double memory);
+
+        [LoggerMessage(Level = LogLevel.Information, Message = "Starting processing; only entries up to year {Year} will be considered")]
+        static partial void LogProcessingProgress(ILogger logger, int year);
 
     }
 }
